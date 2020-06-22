@@ -2,15 +2,13 @@ const express = require("express");
 const mongoose = require("mongoose");
 const multer = require("multer");
 const dotenv = require("dotenv");
+const bodyParser = require("body-parser");
 const cors = require("cors");
 
 const userSchema = require("./models/userSlot");
 const appControllers = require("./controllers/appControllers");
 
 const app = express();
-
-// Set static folder
-app.use(express.static("./public"));
 
 dotenv.config();
 const db = process.env.DBURI;
@@ -29,11 +27,26 @@ mongoose
 mongoose.Promise = global.Promise;
 
 app.use(cors());
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static("./public"));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.use("/", appControllers);
+
+app.use((req, res, next) => {
+  const error = new Error("Not found");
+  error.status = 404;
+  next(error);
+});
+
+app.use((error, req, res, next) => {
+  res.status(error.status || 500);
+  res.json({
+    error: {
+      message: error.message,
+    },
+  });
+});
 
 const PORT = process.env.PORT || 3000;
 
