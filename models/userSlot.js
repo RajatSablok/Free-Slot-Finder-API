@@ -1,22 +1,22 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
   _id: mongoose.Schema.Types.ObjectId,
-  
+
   name: {
     type: String,
-    required: true
+    required: true,
   },
 
   semester: {
     type: Number,
-    required: true
+    required: true,
   },
-  
+
   timetable: {
     type: Object,
-    required: true
-  }
+    required: true,
+  },
 });
 
-module.exports = mongoose.model('userSlot', userSchema);
+module.exports = mongoose.model("userSlot", userSchema);
