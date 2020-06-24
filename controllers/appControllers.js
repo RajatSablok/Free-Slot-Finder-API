@@ -26,10 +26,14 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
+  if (
+    file.mimetype === "image/jpeg" ||
+    file.mimetype === "image/png" ||
+    file.mimetype === "image/jpg"
+  ) {
     cb(null, true);
   } else {
-    cb(null, false);
+    cb(new Error());
   }
 };
 
@@ -41,12 +45,26 @@ router.post("/upload", (req, res, next) => {
       fileSize: 1024 * 1024 * 5,
     },
     fileFilter: fileFilter,
+    onError: function (err, next) {
+      console.log("error", err);
+      next(err);
+    },
   }).single("file");
 
   upload(req, res, (err) => {
-    if (err) {
+    // if (err) {
+    // return res.status(400).json({
+    //   error: "PLease select correct file",
+    // });
+    // }
+
+    if (err instanceof multer.MulterError) {
       return res.status(400).json({
-        error: err,
+        error: "PLease select correct file",
+      });
+    } else if (err) {
+      return res.status(400).json({
+        error: "Something went wrong",
       });
     }
 
@@ -60,9 +78,9 @@ router.post("/upload", (req, res, next) => {
 
     PythonShell.run("./freeSlots.py", options, function (err, results) {
       if (err)
-        res.status(400).json({
-          message: "something went wrong",
-          error: err,
+        return res.status(400).json({
+          message: "Something went wrong",
+          error: "Please upload valid and correctly cropped timetable",
         });
       else {
         var timetableArray = JSON.parse(results);
@@ -91,9 +109,9 @@ router.post("/upload", (req, res, next) => {
   });
 });
 
-//Get names of all users
+//Get all uploaded information of everyone
 router.get("/all", function (req, res) {
-  UserSlots.find({}, { _id: 0, name: 1 })
+  UserSlots.find({}, { __v: 0 })
     .then((data) => {
       console.log(data);
       res.status(200).json({
@@ -107,19 +125,80 @@ router.get("/all", function (req, res) {
 //Get timetable of one user
 router.get("/compare", (req, res, next) => {
   var arr = req.query.check;
-  console.log(arr);
   UserSlots.find(
     { name: { $in: arr } },
     { _id: 0, name: 1, semester: 1, timetable: 1 }
   )
     .then((data) => {
+      const numTimetables = data.length;
+
+      if (numTimetables >= 1) {
+        //save the timetable of first person in an array called first
+        var first = data[0].timetable;
+        var newarr = [];
+
+        // loop to initialize every element of newarr to 0
+        for (var j = 0; j < 5; j++) {
+          newarr[j] = [];
+          for (var k = 0; k < 22; k++) {
+            newarr[j][k] = 0;
+          }
+        }
+
+        // loop to compare each timetable to the first one
+        for (var i = 1; i < data.length; i++) {
+          //save the details of the current user in newvar
+          var newvar = data[i].timetable;
+          // console.log("next log is the timetable of person " + (i + 1));
+          // console.log("newvar", newvar);
+          for (var j = 0; j < 5; j++) {
+            for (var k = 0; k < 22; k++) {
+              if (first[j][k] == 1 && newvar[j][k] == 1) {
+                newarr[j][k] = newarr[j][k] + 1;
+              } else {
+                newarr[j][k] = 0;
+              }
+            }
+          }
+        }
+
+        // finding the max element of newarr
+        var maxRow = newarr.map(function (row) {
+          return Math.max.apply(Math, row);
+        });
+        var max = Math.max.apply(null, maxRow);
+
+        // console.log("Total number of timetables checking:", max);
+
+        // loop to replace number<max with 0 in newarr
+        for (var j = 0; j < 5; j++) {
+          for (var k = 0; k < 22; k++) {
+            if (newarr[j][k] !== max) {
+              newarr[j][k] = 0;
+            }
+          }
+        }
+
+        //loop to replace max with 1 in newarr
+        for (var j = 0; j < 5; j++) {
+          for (var k = 0; k < 22; k++) {
+            if (newarr[j][k] === max) {
+              newarr[j][k] = 1;
+            }
+          }
+        }
+      }
+
       res.status(200).json({
-        message: "success",
-        result: data,
+        message: "Success",
+        numberOfTimetablesCompared: numTimetables,
+        commonFreeSlots: newarr,
       });
     })
     .catch((err) => {
-      res.status(400).json({ error: err });
+      res.status(400).json({
+        error: err,
+      });
     });
 });
 
