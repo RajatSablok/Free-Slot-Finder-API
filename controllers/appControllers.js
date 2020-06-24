@@ -221,4 +221,44 @@ router.get("/users/:search", (req, res, next) => {
     });
 });
 
+//Get names of people according to free slots
+router.get("/range", (req, res, next) => {
+  let offsets = req.body.offsets; // 0 to 21
+  let day = req.body.day; // 0 to 4
+
+  UserSlots.find({})
+    .then((users) => {
+      let freeUsers = [];
+      let dayObj = {};
+      for (let u of users) {
+        //save timetable for given day in dayobj
+        dayObj["day"] = u.timetable[day];
+
+        // loop through offset and check if corresponding numbers
+        // are 1 or not. if yes, push in freeUsers array
+
+        var i;
+        var flag = false;
+        for (i = 0; i < 22; i++) {
+          if (offsets[i] == 1 && dayObj.day[i] != offsets[i]) {
+            flag = true;
+            break;
+          }
+        }
+        if (!flag) {
+          freeUsers.push(u.name);
+        }
+      }
+      res.status(200).json({
+        count: freeUsers.length,
+        freeUsers: freeUsers,
+      });
+    })
+    .catch((err) => {
+      res.status(400).json({
+        error: err,
+      });
+    });
+});
+
 module.exports = router;
