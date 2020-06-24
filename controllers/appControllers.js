@@ -261,4 +261,28 @@ router.get("/range", (req, res, next) => {
     });
 });
 
+//Get all timetables of a particular semester
+router.get("/sem", (req, res, next) => {
+  const semester = req.body.semester;
+  UserSlots.find({ semester: semester })
+    .exec()
+    .then((result) => {
+      if (result.length >= 1) {
+        res.status(200).json({
+          count: result.length,
+          results: result,
+        });
+      } else {
+        res.status(404).json({
+          message: "Could not find any timetable from given semester",
+        });
+      }
+    })
+    .catch((err) => {
+      res.status(400).json({
+        error: err,
+      });
+    });
+});
+
 module.exports = router;
