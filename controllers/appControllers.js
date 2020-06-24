@@ -87,7 +87,7 @@ router.post("/upload", (req, res, next) => {
 
         new UserSlots({
           _id: new mongoose.Types.ObjectId(),
-          name: req.body.name,
+          name: req.body.name.toLowerCase(),
           semester: req.body.semester,
           timetable: timetableArray,
         })
@@ -193,6 +193,25 @@ router.get("/compare", (req, res, next) => {
         message: "Success",
         numberOfTimetablesCompared: numTimetables,
         commonFreeSlots: newarr,
+      });
+    })
+    .catch((err) => {
+      res.status(400).json({
+        error: err,
+      });
+    });
+});
+
+router.get("/users/:search", (req, res, next) => {
+  let search = req.params.search.toLowerCase();
+  console.log(search);
+  let reg = new RegExp(search);
+  console.log(reg);
+  UserSlots.find({ name: { $in: [reg] } })
+    .then((user) => {
+      res.status(200).json({
+        count: user.length,
+        users: user,
       });
     })
     .catch((err) => {
