@@ -13,6 +13,7 @@
 - Find free slots by semester
 - Compare timetables of different users
 - Get users according to their free slots
+- Get slot type of user(morning, evening, or mixed)
 
 ## Instructions to run
 

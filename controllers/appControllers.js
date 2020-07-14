@@ -9,6 +9,7 @@ const multer = require("multer");
 const router = express.Router();
 
 const UserSlots = require("../models/userSlot");
+const { time } = require("console");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -278,6 +279,64 @@ router.get("/sem/:semester", (req, res, next) => {
       } else {
         res.status(404).json({
           message: "Could not find any timetable from given semester",
+        });
+      }
+    })
+    .catch((err) => {
+      res.status(400).json({
+        error: err,
+      });
+    });
+});
+
+//Get slot type
+router.get("/slotType/:userId", (req, res, next) => {
+  const userId = req.params.userId;
+  UserSlots.findById(userId)
+    .exec()
+    .then((result) => {
+      let timetable = result.timetable;
+      let morningFreeCount = 0;
+      let eveningFreeCount = 0;
+      let slotType;
+      //starting 10 till 1 pm
+      //12 2-8 pm
+      for (i = 0; i < 5; i++) {
+        for (j = 0; j < 10; j++) {
+          if (timetable[i][j] == 1) {
+            morningFreeCount += 1;
+          }
+        }
+      }
+
+      for (i = 0; i < 5; i++) {
+        for (j = 10; j < 22; j++) {
+          if (timetable[i][j] == 1) {
+            eveningFreeCount += 1;
+          }
+        }
+      }
+
+      if (morningFreeCount > eveningFreeCount) {
+        res.status(200).json({
+          name: result.name,
+          morningFreeCount,
+          eveningFreeCount,
+          slotType: "Evening",
+        });
+      } else if (eveningFreeCount > morningFreeCount) {
+        res.status(200).json({
+          name: result.name,
+          morningFreeCount,
+          eveningFreeCount,
+          slotType: "Morning",
+        });
+      } else if (morningFreeCount == eveningFreeCount) {
+        res.status(200).json({
+          name: result.name,
+          morningFreeCount,
+          eveningFreeCount,
+          slotType: "Mixed",
         });
       }
     })
