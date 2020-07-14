@@ -47,6 +47,11 @@ router.post("/upload", (req, res, next) => {
     },
     fileFilter: fileFilter,
     onError: function (err, next) {
+      res.status(400).json({
+        message: "Something went wrong",
+        error: err,
+        errormsg: err.toString(),
+      });
       console.log("error", err);
       next(err);
     },
