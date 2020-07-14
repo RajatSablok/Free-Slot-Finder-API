@@ -64,7 +64,9 @@ router.post("/upload", (req, res, next) => {
       });
     } else if (err) {
       return res.status(400).json({
-        error: "Something went wrong",
+        message: "Something went wrong",
+        error: err,
+        errormsg: err.toString(),
       });
     }
 
@@ -102,6 +104,7 @@ router.post("/upload", (req, res, next) => {
             res.status(400).json({
               message: "Something went wrong",
               error: err,
+              errormsg: err.toString,
             })
           );
       }
