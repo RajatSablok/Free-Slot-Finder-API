@@ -223,8 +223,8 @@ router.get("/users/:search", (req, res, next) => {
 
 //Get names of people according to free slots
 router.get("/range", (req, res, next) => {
-  let offsets = req.body.offsets; // 0 to 21
-  let day = req.body.day; // 0 to 4
+  let offsets = req.query.offsets; // 0 to 21
+  let day = req.query.day; // 0 to 4
 
   UserSlots.find({})
     .then((users) => {
@@ -262,8 +262,8 @@ router.get("/range", (req, res, next) => {
 });
 
 //Get all timetables of a particular semester
-router.get("/sem", (req, res, next) => {
-  const semester = req.body.semester;
+router.get("/sem/:semester", (req, res, next) => {
+  const semester = req.params.semester;
   UserSlots.find({ semester: semester })
     .exec()
     .then((result) => {
